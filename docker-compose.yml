@@ -1,0 +1,109 @@
+version: "3.9"
+# Common Django template for GeoNode and Celery services below
+x-common-ckan:
+  &default-common-ckan
+  restart: on-failure
+  env_file:
+    - .env
+
+services:
+  redis:
+    << : *default-common-ckan
+    container_name: redis
+    image: "redis:alpine"
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: redis-cli ping
+      interval: 3s
+      timeout: 5s
+      retries: 5     
+
+  db:
+    << : *default-common-ckan
+    build: 
+      context: ./docker/db/    
+    image: dcatapit_postgis:latest
+    container_name: db
+
+  ckan:
+    << : *default-common-ckan
+    build: 
+      context: ./docker/ckan/
+    container_name: ckan
+    image: dcatapit_ckan:latest
+    cap_add:
+      - SYS_PTRACE
+    expose:
+      - "5000"
+    depends_on:
+      solr:
+        condition: service_healthy
+    ports:
+      - "0.0.0.0:${CKAN_PORT}:${CKAN_PORT}"
+    volumes:
+      - ckan-data:/var/lib/ckan
+      - ckan-config:/etc/ckan
+      - ckan-logs:/var/log/ckan
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  datapusher:
+    << : *default-common-ckan
+    container_name: datapusher
+    #image: keitaro/ckan-datapusher:latest
+    image: eduynza/datapusher-ckan-2.9.2:1.0.0
+    ports:
+      - "8800:8800"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8800"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    # environment:
+    #   - CKAN_HOST=ckan
+
+  solr:
+    << : *default-common-ckan
+    build: 
+      context: ./docker/solr/
+    container_name: solr
+    image: dcatapit_solr:latest
+    expose:
+      - "8983"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - solr-data:/opt/solr/server/solr/ckan/data
+
+  proxy:
+    << : *default-common-ckan
+    image: ghcr.io/linuxserver/swag:latest
+    container_name: proxy
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - proxy-config:/config
+      - ./site-confs/default:/config/nginx/site-confs/default
+    ports:
+      - "443:443"
+      - "80:80" #optional
+    profiles:
+      - prod      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+volumes:
+  proxy-config:
+  ckan-data:
+  ckan-config:
+  ckan-logs:
+  solr-data:

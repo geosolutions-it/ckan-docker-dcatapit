@@ -1,0 +1,6 @@
+set logging on
+bt
+py-bt
+py-list
+thread apply all py-list
+quit
