@@ -75,17 +75,18 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # changes to the ini file -- SHOULD BE IDEMPOTENT
 
 # Make sure azure_auth is before c195
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
-# crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit
-# crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
+# crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest 
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata 
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit
+
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
@@ -119,8 +120,8 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend so
 
 # dcatapit
 
-# crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geonames.org
-# crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
+crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geonames.org
+crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 
 
 # END changes to the ini file 
@@ -162,11 +163,11 @@ ckan --config "$CONFIG_INI" harvester initdb
 echo "Initting DB... -- spatial"
 ckan --config "$CONFIG_INI" spatial initdb
 
-# echo "Initting DB... -- multilang"
-# ckan --config "$CONFIG_INI" multilangdb initdb
+echo "Initting DB... -- multilang"
+ckan --config "$CONFIG_INI" multilangdb initdb
 
-# echo "Initting DB... -- dcatapit"
-# ckan --config "$CONFIG_INI" vocabulary initdb
+echo "Initting DB... -- dcatapit"
+ckan --config "$CONFIG_INI" vocabulary initdb
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"
