@@ -2,7 +2,6 @@
 FROM debian:buster-slim
 LABEL Open Knowledge
 
-EXPOSE 5000
 ENV DEBIAN_FRONTEND=noninteractive
 # Install required system packages
 RUN apt-get -q -y update \
@@ -29,6 +28,8 @@ RUN apt-get -q -y update \
         gdb python3-dbg \
         procps \
         swig \
+        proj-bin \
+        python3-setuptools \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -71,16 +72,16 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@m
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt 
 # RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-azure-auth.git@main#egg=ckanext-azure-auth && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-azure-auth/requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
+#RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.3.3#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-spatial/requirements.txt
-# RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-multilang@master#egg=ckanext-multilang && \
-#     cd $CKAN_VENV/src/ckanext-multilang && python setup.py develop && \
-#     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-multilang/dev-requirements.txt
-# RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@master#egg=ckanext-dcatapit && \
-#     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt 
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-multilang@master#egg=ckanext-multilang && \
+     cd $CKAN_VENV/src/ckanext-multilang && $CKAN_VENV/bin/python setup.py develop && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-multilang/dev-requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@py3#egg=ckanext-dcatapit && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
    
 # Setup CKAN custom scripts
 
