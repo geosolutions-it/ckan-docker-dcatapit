@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "########################################"
+echo "### Starting CKAN entrypoint"
+echo "########################################"
+
 # URL for the primary database, in the format expected by sqlalchemy (required
 # unless linked to a container called 'db')
 : ${CKAN_SQLALCHEMY_URL:=}
@@ -37,6 +41,8 @@ set_environment () {
   export CKAN_SMTP_PASSWORD=${CKAN_SMTP_PASSWORD}
   export CKAN_SMTP_MAIL_FROM=${CKAN_SMTP_MAIL_FROM}
   export CKAN_MAX_UPLOAD_SIZE_MB=${CKAN_MAX_UPLOAD_SIZE_MB}
+  # custom
+  export GEONAMES_USERNAME=${GEONAMES_USERNAME}
 }
 
 write_config () {
@@ -85,14 +91,25 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata 
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit
-
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_org
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_config
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvest_list
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
+# customer specific extensions
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins adbpo_ui
+# end of customer specific extensions
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
-crudini --set --verbose ${CONFIG_TMP} logger_root     level DEBUG
-crudini --set --verbose ${CONFIG_TMP} logger_werkzeug level DEBUG
-crudini --set --verbose ${CONFIG_TMP} logger_ckan     level DEBUG
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url = ${CKAN_SITE_URL}
+
+crudini --set --verbose ${CONFIG_TMP} logger_root     level WARN
+crudini --set --verbose ${CONFIG_TMP} logger_werkzeug level WARN
+crudini --set --verbose ${CONFIG_TMP} logger_ckan     level WARN
 crudini --set --verbose ${CONFIG_TMP} logger_ckanext  level DEBUG
 crudini --set --verbose ${CONFIG_TMP} handler_console level DEBUG
 crudini --set --verbose ${CONFIG_TMP} handler_syslog  level DEBUG
@@ -103,14 +120,6 @@ crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_pre_ping True
 crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_reset_on_return rollback
 crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_timeout 30
 
-#Azure auth plugin https://github.com/geosolutions-it/ckanext-azure-auth.git
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.tenant_id ${TENANT_ID}
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.client_id ${CLIENT_ID}
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.audience ${CLIENT_ID}
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.client_secret ${CLIENT_SECRET}
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.auth_callback_path /azure/callback
-# crudini --set --verbose ${CONFIG_TMP} app:main ckanext.azure_auth.allow_create_users True
-
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.max_resource_size ${CKAN_MAX_UPLOAD_SIZE_MB}
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.callback_url_base ${CKAN_SITE_URL}
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.url ${CKAN_DATAPUSHER_URL}
@@ -118,11 +127,16 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.assume_task_stale
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend solr
 
-# dcatapit
+# dcat / dcatapit
+
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles euro_dcat_ap
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles it_dcat_ap
+crudini --set --verbose ${CONFIG_TMP} app:main  ckanext.dcat.base_uri ${DCAT_BASE_URI}
 
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geonames.org
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
-
+crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
+crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
 # END changes to the ini file 
 cp ${CONFIG_TMP} ${CONFIG_INI}
@@ -155,19 +169,19 @@ set_environment
 source $CKAN_VENV/bin/activate
 
 echo "Initting DB... -- ckan"
-ckan --config "$CONFIG_INI" db init
+ckan -c "$CONFIG_INI" db init
 
 echo "Initting DB... -- harvest"
-ckan --config "$CONFIG_INI" harvester initdb
+ckan -c "$CONFIG_INI" harvester initdb
 
 echo "Initting DB... -- spatial"
-ckan --config "$CONFIG_INI" spatial initdb
+ckan -c "$CONFIG_INI" spatial initdb
 
 echo "Initting DB... -- multilang"
-ckan --config "$CONFIG_INI" multilangdb initdb
+ckan -c "$CONFIG_INI" multilang initdb
 
 echo "Initting DB... -- dcatapit"
-ckan --config "$CONFIG_INI" vocabulary initdb
+ckan -c "$CONFIG_INI" dcatapit initdb
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"

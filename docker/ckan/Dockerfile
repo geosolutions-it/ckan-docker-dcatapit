@@ -41,15 +41,9 @@ ENV CKAN_HOME /usr/lib/ckan
 ENV CKAN_VENV $CKAN_HOME/venv
 ENV CKAN_CONFIG /etc/ckan
 ENV CKAN_STORAGE_PATH /var/lib/ckan
-ENV TENANT_ID 00000000-0000-0000-0000-000000000000
-ENV CLIENT_ID 00000000-0000-0000-0000-000000000000
-ENV CLIENT_SECRET pKf_0000000_00000-0000-0000
 ENV LC_ALL=C.UTF-8
 ENV LANG=C.UTF-8
 # Build-time variables specified by docker-compose.yml / .env
-ARG TENANT_ID
-ARG CLIENT_ID
-ARG CLIENT_SECRET
 ARG CKAN_SITE_URL
 
 # Create ckan user
@@ -68,21 +62,28 @@ RUN $CKAN_VENV/bin/pip install -U pip && \
     $CKAN_VENV/bin/pip install -e $CKAN_VENV/src/ckan/ && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@master#egg=ckanext-dcat && \
-    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt 
 # RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-azure-auth.git@main#egg=ckanext-azure-auth && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-azure-auth/requirements.txt
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.3.3#egg=ckanext-harvest && \
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@master#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-spatial/requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@master#egg=ckanext-dcat && \
+    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt 
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-multilang@master#egg=ckanext-multilang && \
      cd $CKAN_VENV/src/ckanext-multilang && $CKAN_VENV/bin/python setup.py develop && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-multilang/dev-requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@py3#egg=ckanext-dcatapit && \
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@master#egg=ckanext-dcatapit && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
-   
+
+# customer specific extensions
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-adbpo@main#egg=ckanext-adbpo && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-adbpo/requirements.txt
+# end of customer specific extensions
+
 # Setup CKAN custom scripts
 
 COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh

@@ -11,8 +11,8 @@ services:
     << : *default-common-ckan
     container_name: redis
     image: "redis:alpine"
-    ports:
-      - "6379:6379"
+    # ports:
+    #   - "6379:6379"
     healthcheck:
       test: redis-cli ping
       interval: 3s
@@ -35,7 +35,7 @@ services:
     cap_add:
       - SYS_PTRACE
     expose:
-      - "5000"
+      - "${CKAN_PORT}"
     depends_on:
       solr:
         condition: service_healthy
@@ -46,7 +46,7 @@ services:
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000"]
+      test: ["CMD", "curl", "-f", "http://localhost:${CKAN_PORT}"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -72,8 +72,8 @@ services:
       context: ./docker/solr/
     container_name: solr
     image: dcatapit_solr:latest
-    expose:
-      - "8983"
+    # expose:
+    #   - "8983"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8983"]
       interval: 10s
@@ -101,6 +101,7 @@ services:
       interval: 10s
       timeout: 10s
       retries: 5
+
 volumes:
   proxy-config:
   ckan-data:
