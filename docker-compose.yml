@@ -37,7 +37,7 @@ services:
       solr:
         condition: service_healthy
     ports:
-      - "${CKAN_PORT}:${CKAN_PORT}"
+      - "${CKAN_PORT}:5000"
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
