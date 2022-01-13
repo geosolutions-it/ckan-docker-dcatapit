@@ -65,7 +65,7 @@ RUN $CKAN_VENV/bin/pip install -U pip && \
 
 # RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-azure-auth.git@main#egg=ckanext-azure-auth && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-azure-auth/requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
+# RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@master#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \

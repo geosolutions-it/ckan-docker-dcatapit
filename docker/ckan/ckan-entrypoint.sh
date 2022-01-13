@@ -81,7 +81,7 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # changes to the ini file -- SHOULD BE IDEMPOTENT
 
 # Make sure azure_auth is before c195
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
+#crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
