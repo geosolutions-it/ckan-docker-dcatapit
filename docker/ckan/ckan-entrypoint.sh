@@ -58,7 +58,7 @@ done
 
 # If we don't already have a who config file, bootstrap
 if [ ! -e "$CKAN_CONFIG/who.ini" ]; then
-  cp $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini  
+  cp $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 else
   echo "who.ini already exists"
 fi
@@ -81,14 +81,14 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # changes to the ini file -- SHOULD BE IDEMPOTENT
 
 # Make sure azure_auth is before c195
-# crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata 
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
@@ -138,7 +138,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
-# END changes to the ini file 
+# END changes to the ini file
 cp ${CONFIG_TMP} ${CONFIG_INI}
 
 #Configure datastore SQL functions
@@ -183,11 +183,16 @@ ckan -c "$CONFIG_INI" multilang initdb
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
 
+echo "Starting cron"
+cron
+
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"
   # APIKEY=$(cat /proc/sys/kernel/random/uuid)
   echo -ne '\n' | ckan -c "$CONFIG_INI" sysadmin add admin email=admin@localhost name=admin password=adminadmin
 fi
 
+
 echo 'Running command --> ' $@
 exec "$@"
+

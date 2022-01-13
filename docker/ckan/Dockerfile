@@ -30,6 +30,7 @@ RUN apt-get -q -y update \
         swig \
         proj-bin \
         python3-setuptools \
+        cron \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -64,13 +65,13 @@ RUN $CKAN_VENV/bin/pip install -U pip && \
 
 # RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-azure-auth.git@main#egg=ckanext-azure-auth && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-azure-auth/requirements.txt
-#RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@master#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-spatial/requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@master#egg=ckanext-dcat && \
-    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt 
+    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-multilang@master#egg=ckanext-multilang && \
      cd $CKAN_VENV/src/ckanext-multilang && $CKAN_VENV/bin/python setup.py develop && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-multilang/dev-requirements.txt
@@ -85,15 +86,37 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 # end of customer specific extensions
 
 # Setup CKAN custom scripts
-
+RUN $CKAN_VENV/bin/pip install supervisor
+COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
 COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
 COPY ./ckan-run.sh /ckan-run.sh
 # debug tools, not working with container running as unprivileged user
 COPY ./gdb.commands /gdb.commands
 COPY ./capture_gdb.sh /capture_gdb.sh
-RUN chmod +x /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh
+RUN chmod +x /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
 ENV CKAN_LOG=/var/log/ckan
-RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R  /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh ${CKAN_HOME} ${CKAN_CONFIG} ${CKAN_STORAGE_PATH} ${CKAN_LOG}
+RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R /consumer-entrypoint.sh /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh ${CKAN_HOME} ${CKAN_CONFIG} ${CKAN_STORAGE_PATH} ${CKAN_LOG}
+
+# for gather and fecther consumers used by harvester
+
+RUN mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d
+RUN chown -R ckan:ckan /var/log/supervisor /var/log/ckan /var/run/supervisor /etc/supervisor
+RUN chown ckan:ckan /var/run
+RUN chmod gu+rw /var/run
+RUN chmod gu+s /usr/sbin/cron
+COPY ./supervisord.conf /etc/supervisor/supervisord.conf
+# Copy hello-cron file to the cron.d directory
+COPY crontab /etc/cron.d/crontab-ckan
+
+# Give execution rights on the cron job
+RUN chmod 0644 /etc/cron.d/crontab-ckan
+
+# Apply cron job
+RUN crontab -u ckan /etc/cron.d/crontab-ckan
+
+# Create the log file to be able to run tail
+RUN touch /var/log/cron.log
+
 #Please comment if you need to use debugging tools like gdb
 USER ckan
 
@@ -101,5 +124,3 @@ SHELL ["/bin/bash", "-c"]
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 CMD ["/ckan-run.sh"]
-
-# CMD ["$CKAN_VENV/bin/python3", "$CKAN_VENV/bin/ckan","-c","/etc/ckan/production.ini", "run", "--host", "0.0.0.0"]
