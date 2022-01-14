@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 echo "########################################"
 echo "### Starting CKAN entrypoint"
@@ -190,6 +191,26 @@ if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=de
   echo "Adding admin user"
   # APIKEY=$(cat /proc/sys/kernel/random/uuid)
   echo -ne '\n' | ckan -c "$CONFIG_INI" sysadmin add admin email=admin@localhost name=admin password=adminadmin
+fi
+
+if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
+  echo "Starting configuration of vucabolaries"
+
+  # download vucabolaries
+  wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
+  wget $EUROVOC_URL -O /tmp/eurovoc.rdf
+  # run ckan
+  ckan --config=$CONFIG_INI dcatapit load --name=languages --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=eu_themes --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=places --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=frequencies --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=filetype --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name subthemes --filename /tmp/theme-subtheme-mapping.rdf --eurovoc /tmp/eurovoc.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name licenses --filename $CKAN_VENV/src/ckanext-dcatapit/examples/licenses.rdf
+  touch ${CKAN_CONFIG}/vocabularies.downloaded
+
+  echo "Finished configuration of vucabularies"
+
 fi
 
 
