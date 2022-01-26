@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
+set -x
 
 echo "########################################"
 echo "### Starting CKAN entrypoint"
@@ -58,7 +59,7 @@ done
 
 # If we don't already have a who config file, bootstrap
 if [ ! -e "$CKAN_CONFIG/who.ini" ]; then
-  cp $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini  
+  cp $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 else
   echo "who.ini already exists"
 fi
@@ -81,14 +82,14 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # changes to the ini file -- SHOULD BE IDEMPOTENT
 
 # Make sure azure_auth is before c195
-# crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
+#crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata 
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
@@ -138,7 +139,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
-# END changes to the ini file 
+# END changes to the ini file
 cp ${CONFIG_TMP} ${CONFIG_INI}
 
 #Configure datastore SQL functions
@@ -183,11 +184,36 @@ ckan -c "$CONFIG_INI" multilang initdb
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
 
+echo "Starting cron"
+cron
+
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"
   # APIKEY=$(cat /proc/sys/kernel/random/uuid)
   echo -ne '\n' | ckan -c "$CONFIG_INI" sysadmin add admin email=admin@localhost name=admin password=adminadmin
 fi
 
+if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
+  echo "Starting configuration of vucabolaries"
+
+  # download vucabolaries
+  wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
+  wget $EUROVOC_URL -O /tmp/eurovoc.rdf
+  # run ckan
+  ckan --config=$CONFIG_INI dcatapit load --name=languages --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=eu_themes --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=places --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=frequencies --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=filetype --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-skos.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name subthemes --filename /tmp/theme-subtheme-mapping.rdf --eurovoc /tmp/eurovoc.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name licenses --filename $CKAN_VENV/src/ckanext-dcatapit/examples/licenses.rdf
+  touch ${CKAN_CONFIG}/vocabularies.downloaded
+
+  echo "Finished configuration of vucabularies"
+
+fi
+
+
 echo 'Running command --> ' $@
 exec "$@"
+
