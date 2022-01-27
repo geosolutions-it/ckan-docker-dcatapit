@@ -80,9 +80,6 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 #cp ${CONFIG_INI} "/etc/ckan/$(date -Ins)_ckan.ini"
 
 # changes to the ini file -- SHOULD BE IDEMPOTENT
-
-# Make sure azure_auth is before c195
-#crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins grace_period
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
@@ -95,7 +92,7 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_org
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_config
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvest_list
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
@@ -115,16 +112,23 @@ crudini --set --verbose ${CONFIG_TMP} logger_ckanext  level DEBUG
 crudini --set --verbose ${CONFIG_TMP} handler_console level DEBUG
 crudini --set --verbose ${CONFIG_TMP} handler_syslog  level DEBUG
 
-crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_size 10
-crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.echo_pool True
+crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.echo_pool     True
+crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_size     10
 crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_pre_ping True
 crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_reset_on_return rollback
-crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_timeout 30
+crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_timeout  30
 
-crudini --set --verbose ${CONFIG_TMP} app:main ckan.max_resource_size ${CKAN_MAX_UPLOAD_SIZE_MB}
-crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.callback_url_base ${CKAN_SITE_URL}
-crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.url ${CKAN_DATAPUSHER_URL}
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.url                ${CKAN_DATAPUSHER_URL}
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.callback_url_base  ${CKAN_SITE_URL}
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.assume_task_stale_after ${DATAPUSHER_ASSUME_TASK_STALE}
+
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.max_resource_size          ${CKAN_MAX_UPLOAD_SIZE_MB}
+
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.auth.create_user_via_web   false
+
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.locale_default    it
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.locale_order     "it en de fr"
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.locales_offered  "it en de fr"
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend solr
 
