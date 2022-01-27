@@ -51,8 +51,11 @@ ARG CKAN_SITE_URL
 RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/bash ckan
 
 # Setup virtual environment for CKAN
-RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3 -m venv $CKAN_VENV
+RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && chown ckan:ckan -R ${CKAN_HOME} $CKAN_CONFIG $CKAN_STORAGE_PATH
+
+USER ckan
+
+RUN python3 -m venv $CKAN_VENV
 
 RUN git clone https://github.com/ckan/ckan.git -b 2.9 $CKAN_VENV/src/ckan
 
@@ -93,11 +96,16 @@ COPY ./ckan-run.sh /ckan-run.sh
 # debug tools, not working with container running as unprivileged user
 COPY ./gdb.commands /gdb.commands
 COPY ./capture_gdb.sh /capture_gdb.sh
-RUN chmod +x /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
-ENV CKAN_LOG=/var/log/ckan
-RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R /consumer-entrypoint.sh /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh ${CKAN_HOME} ${CKAN_CONFIG} ${CKAN_STORAGE_PATH} ${CKAN_LOG}
 
-# for gather and fecther consumers used by harvester
+USER root
+RUN chmod +x           /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
+RUN chown ckan:ckan -R /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
+
+ENV CKAN_LOG=/var/log/ckan
+RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R ${CKAN_LOG}
+
+
+# for gather and fetch consumers used by harvester
 
 RUN mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d
 RUN chown -R ckan:ckan /var/log/supervisor /var/log/ckan /var/run/supervisor /etc/supervisor
