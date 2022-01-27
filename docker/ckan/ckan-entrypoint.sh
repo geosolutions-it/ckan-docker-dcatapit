@@ -198,26 +198,24 @@ if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=de
 fi
 
 if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
-  echo "Starting configuration of vucabolaries"
+  echo "Starting configuration of vocabolaries"
 
-  # download vucabolaries
-  wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
-  wget $EUROVOC_URL -O /tmp/eurovoc.rdf
-  # run ckan
-  ckan --config=$CONFIG_INI dcatapit load --name=languages --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-skos.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=eu_themes --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-skos.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=places --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-skos.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=frequencies --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-skos.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=filetype --filename=$CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-skos.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name subthemes --filename /tmp/theme-subtheme-mapping.rdf --eurovoc /tmp/eurovoc.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name licenses --filename $CKAN_VENV/src/ckanext-dcatapit/examples/licenses.rdf
+  # download vocabolaries
+  #wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
+  #wget $EUROVOC_URL -O /tmp/eurovoc.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=languages   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=eu_themes   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=places      --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=frequencies --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name=filetype    --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name subthemes   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/theme-subtheme-mapping.rdf \
+                                                             --eurovoc  $CKAN_VENV/src/ckanext-dcatapit/vocabularies/eurovoc-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --name licenses    --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/licences.rdf
+  
   touch ${CKAN_CONFIG}/vocabularies.downloaded
 
-  echo "Finished configuration of vucabularies"
-
+  echo "Finished configuration of vocabularies"
 fi
-
 
 echo 'Running command --> ' $@
 exec "$@"
-
