@@ -137,6 +137,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend so
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles euro_dcat_ap
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles it_dcat_ap
 crudini --set --verbose ${CONFIG_TMP} app:main  ckanext.dcat.base_uri ${DCAT_BASE_URI}
+crudini --set --verbose ${CONFIG_TMP} app:main  ckan.dcatapit.eurovoc_location $CKAN_VENV/src/ckanext-dcatapit/vocabularies/eurovoc-filtered.rdf
 
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geonames.org
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
@@ -203,14 +204,13 @@ if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
   # download vocabolaries
   #wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
   #wget $EUROVOC_URL -O /tmp/eurovoc.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=languages   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=eu_themes   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=places      --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=frequencies --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name=filetype    --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name subthemes   --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/theme-subtheme-mapping.rdf \
-                                                             --eurovoc  $CKAN_VENV/src/ckanext-dcatapit/vocabularies/eurovoc-filtered.rdf
-  ckan --config=$CONFIG_INI dcatapit load --name licenses    --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/licences.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/frequencies-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-filtered.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/theme-subtheme-mapping.rdf
+  ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/licences.rdf
   
   touch ${CKAN_CONFIG}/vocabularies.downloaded
 
