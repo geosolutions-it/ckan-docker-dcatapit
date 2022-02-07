@@ -31,6 +31,7 @@ RUN apt-get -q -y update \
         proj-bin \
         python3-setuptools \
         cron \
+        curl \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 

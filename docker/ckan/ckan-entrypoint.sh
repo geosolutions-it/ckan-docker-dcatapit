@@ -57,6 +57,9 @@ while ! pg_isready -h $PG_HOST -U ckan; do
   sleep 1;
 done
 
+if [ -f "/tmp/ckan.config.done" ]; then
+  rm /tmp/ckan.config.done
+fi
 # If we don't already have a who config file, bootstrap
 if [ ! -e "$CKAN_CONFIG/who.ini" ]; then
   cp $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
@@ -211,11 +214,11 @@ if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-filtered.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/theme-subtheme-mapping.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/licences.rdf
-  
+
   touch ${CKAN_CONFIG}/vocabularies.downloaded
 
   echo "Finished configuration of vocabularies"
 fi
-
+touch /tmp/ckan.config.done
 echo 'Running command --> ' $@
 exec "$@"
