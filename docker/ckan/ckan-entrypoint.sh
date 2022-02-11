@@ -189,8 +189,6 @@ ckan -c "$CONFIG_INI" multilang initdb
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
 
-echo "Starting cron"
-cron
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"
@@ -211,11 +209,15 @@ if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/filetypes-filtered.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/theme-subtheme-mapping.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/licences.rdf
-  
+
   touch ${CKAN_CONFIG}/vocabularies.downloaded
 
   echo "Finished configuration of vocabularies"
 fi
+
+echo "Starting ckan scheduler"
+
+/usr/lib/ckan/venv/bin/python /usr/local/bin/scheduler.py &
 
 echo 'Running command --> ' $@
 exec "$@"

@@ -1,1 +1,0 @@
-*/15 * * * *    /usr/lib/ckan/venv/bin/ckan -c /etc/ckan/production.ini harvester run

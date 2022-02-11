@@ -30,7 +30,7 @@ RUN apt-get -q -y update \
         swig \
         proj-bin \
         python3-setuptools \
-        cron \
+        curl \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -89,7 +89,7 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 # end of customer specific extensions
 
 # Setup CKAN custom scripts
-RUN $CKAN_VENV/bin/pip install supervisor
+RUN $CKAN_VENV/bin/pip install supervisor==4.2.4
 COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
 COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
 COPY ./ckan-run.sh /ckan-run.sh
@@ -111,19 +111,11 @@ RUN mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d
 RUN chown -R ckan:ckan /var/log/supervisor /var/log/ckan /var/run/supervisor /etc/supervisor
 RUN chown ckan:ckan /var/run
 RUN chmod gu+rw /var/run
-RUN chmod gu+s /usr/sbin/cron
 COPY ./supervisord.conf /etc/supervisor/supervisord.conf
-# Copy hello-cron file to the cron.d directory
-COPY crontab /etc/cron.d/crontab-ckan
+COPY ./scheduler.py /usr/local/bin/scheduler.py
+RUN chmod +x /usr/local/bin/scheduler.py
+RUN $CKAN_VENV/bin/pip install schedule==1.1.0
 
-# Give execution rights on the cron job
-RUN chmod 0644 /etc/cron.d/crontab-ckan
-
-# Apply cron job
-RUN crontab -u ckan /etc/cron.d/crontab-ckan
-
-# Create the log file to be able to run tail
-RUN touch /var/log/cron.log
 
 #Please comment if you need to use debugging tools like gdb
 USER ckan
