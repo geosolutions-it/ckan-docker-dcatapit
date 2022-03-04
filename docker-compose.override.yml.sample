@@ -1,0 +1,25 @@
+version: '3.9'
+
+x-local-mappings:
+  &local-volumes
+  volumes:
+    #- ../ckan-docker-src/ckanext-dcatapit:/usr/lib/ckan/venv/src/ckanext-dcatapit
+    #- ../ckan-docker-src/ckanext-datitrentinoit:/usr/lib/ckan/venv/src/ckanext-datitrentinoit
+    #- ../29_dcat/ckanext-dcatapit:/usr/lib/ckan/venv/src/ckanext-dcatapit
+    #- ../29_dcat/ckanext-datitrentinoit:/usr/lib/ckan/venv/src/ckanext-datitrentinoit
+    - /tmp:/tmp
+
+services:
+
+  db:
+    ports:
+      - "54322:5432"
+
+  ckan:
+    << : *local-volumes
+
+  gather_consumer:
+    << : *local-volumes
+
+  fetch_consumer:
+    << : *local-volumes
