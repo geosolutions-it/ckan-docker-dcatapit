@@ -97,8 +97,10 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
 # customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins adbpo_ui
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebpro_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebsubpro_harvester
 # end of customer specific extensions
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
