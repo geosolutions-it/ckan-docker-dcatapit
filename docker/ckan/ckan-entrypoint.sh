@@ -79,6 +79,9 @@ CONFIG_TMP=/tmp/ckan.ini
 cp ${CONFIG_INI} ${CONFIG_TMP}
 #cp ${CONFIG_INI} "/etc/ckan/$(date -Ins)_ckan.ini"
 
+# Please note that many values are configured through environment variables, not in the ini file
+# See https://docs.ckan.org/en/2.9/maintaining/configuration.html#environment-variables
+
 # changes to the ini file -- SHOULD BE IDEMPOTENT
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
@@ -92,10 +95,15 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_org
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_config
-crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+#crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvest_list
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_vocabulary
+
+# remove plugins that may have been set in previous configurations
+crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+
 # customer specific extensions
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
@@ -105,7 +113,7 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
-crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url = ${CKAN_SITE_URL}
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url ${CKAN_SITE_URL}
 
 crudini --set --verbose ${CONFIG_TMP} logger_root     level WARN
 crudini --set --verbose ${CONFIG_TMP} logger_werkzeug level WARN
@@ -121,7 +129,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_reset_on_return r
 crudini --set --verbose ${CONFIG_TMP} app:main sqlalchemy.pool_timeout  30
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.url                ${CKAN_DATAPUSHER_URL}
-crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.callback_url_base  ${CKAN_SITE_URL}
+crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.callback_url_base  ${CKAN_INTERNAL_URL}
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.datapusher.assume_task_stale_after ${DATAPUSHER_ASSUME_TASK_STALE}
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.max_resource_size          ${CKAN_MAX_UPLOAD_SIZE_MB}
@@ -133,6 +141,21 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckan.locale_order     "it en de f
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.locales_offered  "it en de fr"
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend solr
+
+# preview formats
+
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.json_formats json
+
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats xml
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats rdf
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats rdf+xml
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats owl+xml
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats atom
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.xml_formats rss
+
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.text_formats text
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.text_formats plain
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.preview.text_formats text/plain
 
 # dcat / dcatapit
 
@@ -151,9 +174,10 @@ cp ${CONFIG_TMP} ${CONFIG_INI}
 
 #Configure datastore SQL functions
 echo "Configuring datastore..."
-$CKAN_VENV/bin/ckan -c ${CONFIG_INI} datastore set-permissions > /tmp/check_datastore.sql
-PGPASSWORD=${CKAN_DATABASE_PASSWORD} psql --set ON_ERROR_STOP=1 -U ckan -h ${PG_HOST} --dbname datastore
 
+# we don't want logs lines to creep into the sql script
+$CKAN_VENV/bin/ckan -c ${CONFIG_INI} datastore set-permissions | grep -v  sqlalchemy.pool > /tmp/check_datastore.sql
+PGPASSWORD=${CKAN_DATABASE_PASSWORD} psql --set ON_ERROR_STOP=1 -U ckan -h ${PG_HOST} --dbname datastore -f /tmp/check_datastore.sql
 
 # Get or create CKAN_SQLALCHEMY_URL
 if [ -z "$CKAN_SQLALCHEMY_URL" ]; then

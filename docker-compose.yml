@@ -1,10 +1,12 @@
 version: "3.9"
-# Common Django template for GeoNode and Celery services below
+
+# Common template for CKAN services below
 x-common-ckan:
   &default-common-ckan
   restart: on-failure
   env_file:
     - .env
+
 services:
   redis:
     << : *default-common-ckan
@@ -15,6 +17,7 @@ services:
       interval: 3s
       timeout: 5s
       retries: 5
+
   db:
     << : *default-common-ckan
     build:
@@ -28,6 +31,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
   ckan:
     << : *default-common-ckan
     build:
@@ -59,10 +63,9 @@ services:
   datapusher:
     << : *default-common-ckan
     container_name: datapusher-${COMPOSE_PROFILES}
-    #image: keitaro/ckan-datapusher:latest
-    image: eduynza/datapusher-ckan-2.9.2:1.0.0
+    image: keitaro/ckan-datapusher:latest
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8800"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -80,6 +83,7 @@ services:
       retries: 5
     volumes:
       - solr-data:/opt/solr/server/solr/ckan/data
+
   gather_consumer:
     << : *default-common-ckan
     depends_on:
@@ -93,6 +97,7 @@ services:
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
       - ./docker/ckan/ckan_harvesting_gather.conf:/etc/supervisor/conf.d/ckan_harvesting.conf
+
   fetch_consumer:
     << : *default-common-ckan
     depends_on:

@@ -88,18 +88,10 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-datitrentinoit/requirements.txt
 # end of customer specific extensions
 
-# Setup CKAN custom scripts
+
 RUN $CKAN_VENV/bin/pip install supervisor==4.2.4
-COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
-COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
-COPY ./ckan-run.sh /ckan-run.sh
-# debug tools, not working with container running as unprivileged user
-COPY ./gdb.commands /gdb.commands
-COPY ./capture_gdb.sh /capture_gdb.sh
 
 USER root
-RUN chmod +x           /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
-RUN chown ckan:ckan -R /ckan-entrypoint.sh /capture_gdb.sh /ckan-run.sh /consumer-entrypoint.sh
 
 ENV CKAN_LOG=/var/log/ckan
 RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R ${CKAN_LOG}
@@ -115,6 +107,17 @@ COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 COPY ./scheduler.py /usr/local/bin/scheduler.py
 RUN chmod +x /usr/local/bin/scheduler.py
 RUN $CKAN_VENV/bin/pip install schedule==1.1.0
+
+# Setup CKAN custom scripts
+COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
+COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
+COPY ./ckan-run.sh /ckan-run.sh
+# debug tools, not working with container running as unprivileged user
+COPY ./gdb.commands /gdb.commands
+COPY ./capture_gdb.sh /capture_gdb.sh
+
+RUN chmod +x           /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
+RUN chown ckan:ckan -R /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
 
 
 #Please comment if you need to use debugging tools like gdb
