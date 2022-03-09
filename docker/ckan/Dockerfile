@@ -51,7 +51,8 @@ ARG CKAN_SITE_URL
 RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/bash ckan
 
 # Setup virtual environment for CKAN
-RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && chown ckan:ckan -R ${CKAN_HOME} $CKAN_CONFIG $CKAN_STORAGE_PATH
+RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH $CKAN_HOME/ini && \
+    chown ckan:ckan -R ${CKAN_HOME} $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 USER ckan
 
@@ -66,9 +67,6 @@ RUN $CKAN_VENV/bin/pip install -U pip && \
     $CKAN_VENV/bin/pip install -e $CKAN_VENV/src/ckan/ && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 
-# RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-azure-auth.git@main#egg=ckanext-azure-auth && \
-#     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-azure-auth/requirements.txt
-# RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grace-period.git@main#egg=ckanext-grace-period
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@master#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \
@@ -94,17 +92,16 @@ RUN $CKAN_VENV/bin/pip install supervisor==4.2.4
 USER root
 
 ENV CKAN_LOG=/var/log/ckan
-RUN mkdir -p ${CKAN_LOG} && chown ckan:ckan -R ${CKAN_LOG}
+RUN mkdir -p ${CKAN_LOG} && \
+    chown ckan:ckan -R ${CKAN_LOG} && \
+    mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d && \
+    chown -R ckan:ckan /var/log/supervisor /var/log/ckan /var/run/supervisor /etc/supervisor && \
+    chown ckan:ckan /var/run && \
+    chmod gu+rw /var/run
 
-
-# for gather and fetch consumers used by harvester
-
-RUN mkdir -p /var/log/supervisor /var/run/supervisor /etc/supervisor/conf.d
-RUN chown -R ckan:ckan /var/log/supervisor /var/log/ckan /var/run/supervisor /etc/supervisor
-RUN chown ckan:ckan /var/run
-RUN chmod gu+rw /var/run
 COPY ./supervisord.conf /etc/supervisor/supervisord.conf
 COPY ./scheduler.py /usr/local/bin/scheduler.py
+
 RUN chmod +x /usr/local/bin/scheduler.py
 RUN $CKAN_VENV/bin/pip install schedule==1.1.0
 
@@ -115,10 +112,10 @@ COPY ./ckan-run.sh /ckan-run.sh
 # debug tools, not working with container running as unprivileged user
 COPY ./gdb.commands /gdb.commands
 COPY ./capture_gdb.sh /capture_gdb.sh
+COPY ./ini $CKAN_HOME/ini
 
-RUN chmod +x           /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
-RUN chown ckan:ckan -R /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
-
+RUN chmod +x           /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh && \
+    chown ckan:ckan -R /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
 
 #Please comment if you need to use debugging tools like gdb
 USER ckan

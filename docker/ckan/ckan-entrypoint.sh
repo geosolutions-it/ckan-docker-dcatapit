@@ -167,6 +167,16 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
+# full INI blocks 
+if [ -n "$(ls -A /usr/lib/ckan/ini/*.ini 2>/dev/null)" ]
+then
+  for ini in /usr/lib/ckan/ini/*.ini ; do
+    echo "Merging configuration from $ini"
+    crudini --verbose --merge ${CONFIG_TMP} < $ini
+  done
+else
+    echo "No ini files to merge)"
+fi
 # END changes to the ini file
 cp ${CONFIG_TMP} ${CONFIG_INI}
 

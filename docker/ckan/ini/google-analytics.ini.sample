@@ -1,0 +1,15 @@
+[app:main]
+
+# Required configuration settings
+googleanalytics.id = UA-1010101-1
+googleanalytics.account = Account name (i.e. data.gov.uk, see top level item at https://www.google.com/analytics)
+googleanalytics.username = googleaccount@gmail.com
+googleanalytics.password = googlepassword
+
+# Optional configuration settings
+#googleanalytics_resource_prefix = /downloads/
+#googleanalytics.domain = auto
+#googleanalytics.track_events = false
+#googleanalytics.fields = {}
+#googleanalytics.enable_user_id = false
+#googleanalytics.download_handler = ckan.views.resource:download
