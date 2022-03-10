@@ -80,10 +80,15 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
 
 # customer specific extensions
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
-     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-adbpo@main#egg=ckanext-adbpo && \
-     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-adbpo/requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-geoview.git@master#egg=ckanext-geoview && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geoview/pip-requirements.txt     
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-showcase.git@master#egg=ckanext-showcase && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-showcase/requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-googleanalytics.git#egg=ckanext-googleanalytics && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-googleanalytics/requirements.txt
+
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-umbria@main#egg=ckanext-umbria && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-umbria/requirements.txt
 # end of customer specific extensions
 
 

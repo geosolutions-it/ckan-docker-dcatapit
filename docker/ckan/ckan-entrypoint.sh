@@ -105,9 +105,21 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
 
 # customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins adbpo_ui
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins googleanalytics
+#crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins odi_certificates
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geo_view
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geojson_view
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins shp_view
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins umbria
+
 # end of customer specific extensions
+
+# dev specific cleanup
+for plugin in geonode_harvester adbpo_ui datitrentinoit statwebpro_harvester statwebsubpro_harvester ; do
+  crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+done
+# end of dev specific cleanup
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
