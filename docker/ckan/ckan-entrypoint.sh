@@ -105,10 +105,10 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
 
 # customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebpro_harvester
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebsubpro_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
 # end of customer specific extensions
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
