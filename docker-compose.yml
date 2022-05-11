@@ -54,7 +54,7 @@ services:
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/api/3"]
+      test: ["CMD", "curl", "--max-time", "10", "-f", "http://localhost:5000/api/3"]
       interval: 10s
       timeout: 10s
       # this is quite high to avoid the check failing because ckan is not yet configured.
