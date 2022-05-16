@@ -104,13 +104,6 @@ crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins
 # remove plugins that may have been set in previous configurations
 crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
 
-# customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebpro_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebsubpro_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
-# end of customer specific extensions
-
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url ${CKAN_SITE_URL}
@@ -168,6 +161,15 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geona
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
+
+# customer specific extensions
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebpro_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebsubpro_harvester
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
+
+crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles datitrentinoit_ap
+# end of customer specific extensions
 
 # END changes to the ini file
 cp ${CONFIG_TMP} ${CONFIG_INI}
