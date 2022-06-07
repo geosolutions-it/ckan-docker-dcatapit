@@ -58,7 +58,7 @@ USER ckan
 
 RUN python3 -m venv $CKAN_VENV
 
-RUN git clone https://github.com/ckan/ckan.git -b 2.9 $CKAN_VENV/src/ckan
+RUN git clone https://github.com/ckan/ckan.git -b ckan-2.9.5 $CKAN_VENV/src/ckan
 
 RUN $CKAN_VENV/bin/pip install -U pip && \
     $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
