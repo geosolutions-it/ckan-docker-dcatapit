@@ -83,26 +83,19 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # See https://docs.ckan.org/en/2.9/maintaining/configuration.html#environment-variables
 
 # changes to the ini file -- SHOULD BE IDEMPOTENT
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_org
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_config
-#crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvest_list
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_vocabulary
-
-# remove plugins that may have been set in previous configurations
-crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+crudini --set ${CONFIG_TMP} app:main ckan.plugins ""
+for plugin in \
+    stats \
+    text_view image_view recline_view \
+    datastore datapusher \
+    harvest \
+    spatial_metadata spatial_query \
+    structured_data dcat dcat_json_interface \
+    multilang \
+    dcatapit_pkg dcatapit_org dcatapit_config dcatapit_harvest_list dcatapit_harvester dcatapit_csw_harvester dcatapit_vocabulary
+do
+    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+done
 
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
@@ -162,11 +155,14 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
-# customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datitrentinoit
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebpro_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins statwebsubpro_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins showcase
+# customer specific plugins
+for plugin in \
+    grouplabel \
+    datitrentinoit statwebpro_harvester statwebsubpro_harvester opencity_harvester comunweb_harvester \
+    showcase
+do
+    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+done
 
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles datitrentinoit_ap
 # end of customer specific extensions
