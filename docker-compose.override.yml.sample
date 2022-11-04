@@ -3,10 +3,7 @@ version: '3.9'
 x-local-mappings:
   &local-volumes
   volumes:
-    #- ../ckan-docker-src/ckanext-dcatapit:/usr/lib/ckan/venv/src/ckanext-dcatapit
-    #- ../ckan-docker-src/ckanext-datitrentinoit:/usr/lib/ckan/venv/src/ckanext-datitrentinoit
-    #- ../29_dcat/ckanext-dcatapit:/usr/lib/ckan/venv/src/ckanext-dcatapit
-    #- ../29_dcat/ckanext-datitrentinoit:/usr/lib/ckan/venv/src/ckanext-datitrentinoit
+    #- ../src/ckanext-dcatapit:/usr/lib/ckan/venv/src/ckanext-dcatapit
     - /tmp:/tmp
 
 services:

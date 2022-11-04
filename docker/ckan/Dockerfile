@@ -80,10 +80,8 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
 
 # customer specific extensions
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
-     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-adbpo@main#egg=ckanext-adbpo && \
-     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-adbpo/requirements.txt
+#RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
+#     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
 # end of customer specific extensions
 
 
