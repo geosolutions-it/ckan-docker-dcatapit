@@ -3,7 +3,7 @@ version: "3.9"
 # Common template for CKAN services below
 x-common-ckan:
   &default-common-ckan
-  restart: on-failure
+  restart: unless-stopped
   env_file:
     - .env
 
@@ -54,11 +54,11 @@ services:
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
     healthcheck:
-      test: ["CMD", "curl", "--max-time", "10", "-f", "http://localhost:5000/api/3"]
+      test: curl --max-time 10 -f http://localhost:5000/api/3 || exit 1
+      start_period: 60s
       interval: 10s
       timeout: 10s
-      # this is quite high to avoid the check failing because ckan is not yet configured.
-      retries: 30
+      retries: 5
 
   datapusher:
     << : *default-common-ckan
