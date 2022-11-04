@@ -83,26 +83,19 @@ cp ${CONFIG_INI} ${CONFIG_TMP}
 # See https://docs.ckan.org/en/2.9/maintaining/configuration.html#environment-variables
 
 # changes to the ini file -- SHOULD BE IDEMPOTENT
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins structured_data
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datastore
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins datapusher
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins harvest
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcat_json_interface
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_metadata
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins spatial_query
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins multilang
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_pkg
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_org
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_config
-#crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvest_list
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_csw_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_vocabulary
-
-# remove plugins that may have been set in previous configurations
-crudini --del --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins dcatapit_subcatalog_facets
+crudini --set ${CONFIG_TMP} app:main ckan.plugins ""
+for plugin in \
+    stats \
+    text_view image_view recline_view \
+    datastore datapusher \
+    harvest \
+    spatial_metadata spatial_query \
+    structured_data dcat dcat_json_interface \
+    multilang \
+    dcatapit_pkg dcatapit_org dcatapit_config dcatapit_harvest_list dcatapit_harvester dcatapit_csw_harvester dcatapit_vocabulary
+do
+    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+done
 
 # customer specific extensions
 crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
@@ -166,6 +159,17 @@ crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesApiServer secure.geona
 crudini --set --verbose ${CONFIG_TMP} app:main my.geoNamesProtocol https
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
+
+# customer specific plugins
+#for plugin in \
+#    grouplabel \
+#    custom_lf custom_harvester
+#do
+#    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+#done
+
+#crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles custom_ap
+# end of customer specific extensions
 
 # full INI blocks 
 if [ -n "$(ls -A /usr/lib/ckan/ini/*.ini 2>/dev/null)" ]
@@ -234,8 +238,7 @@ if [ ! -f "${CKAN_CONFIG}/vocabularies.downloaded" ]; then
   echo "Starting configuration of vocabolaries"
 
   # download vocabolaries
-  #wget $EUROVOC_MAPPING -O /tmp/theme-subtheme-mapping.rdf
-  #wget $EUROVOC_URL -O /tmp/eurovoc.rdf
+  # (eurovoc is already set using ckan.dcatapit.eurovoc_location)
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/languages-filtered.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/data-theme-filtered.rdf
   ckan --config=$CONFIG_INI dcatapit load --filename $CKAN_VENV/src/ckanext-dcatapit/vocabularies/places-filtered.rdf
