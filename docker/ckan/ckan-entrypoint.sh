@@ -159,6 +159,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USER
 for plugin in \
     grouplabel \
     datitrentinoit statwebpro_harvester statwebsubpro_harvester opencity_harvester comunweb_harvester \
+    report broken_links_report \
     showcase
 do
     crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
@@ -213,6 +214,8 @@ ckan -c "$CONFIG_INI" multilang initdb
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
 
+echo "Initting DB... -- report"
+ckan -c "$CONFIG_INI" report initdb
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
   echo "Adding admin user"

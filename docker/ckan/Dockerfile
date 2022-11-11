@@ -84,6 +84,8 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 # customer specific extensions
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-showcase.git@master#egg=ckanext-showcase && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-showcase/requirements.txt
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-report.git@master#egg=ckanext-report && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-report/requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-datitrentinoit@master#egg=ckanext-datitrentinoit && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-datitrentinoit/requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-grouplabel@main#egg=ckanext-grouplabel
