@@ -8,36 +8,52 @@ x-common-ckan:
     - .env
 
 services:
+
+  db:
+    << : *default-common-ckan
+    image: dcatapit_postgis-${COMPOSE_PROFILES}:latest
+    container_name: db-${COMPOSE_PROFILES}
+    build:
+      context: ./docker/db/
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      start_period: 60s
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - db:/var/lib/postgresql/data
+
+  solr:
+    << : *default-common-ckan
+    image: dcatapit_solr-${COMPOSE_PROFILES}:latest
+    container_name: solr-${COMPOSE_PROFILES}
+    build:
+      context: ./docker/solr/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8983"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    volumes:
+      - solr-data:/opt/solr/server/solr/ckan/data
+
   redis:
     << : *default-common-ckan
-    container_name: redis-${COMPOSE_PROFILES}
     image: "redis:alpine"
+    container_name: redis-${COMPOSE_PROFILES}
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 3s
       timeout: 5s
       retries: 5
 
-  db:
-    << : *default-common-ckan
-    build:
-      context: ./docker/db/
-    image: dcatapit_postgis-${COMPOSE_PROFILES}:latest
-    container_name: db-${COMPOSE_PROFILES}
-    volumes:
-      - db:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   ckan:
     << : *default-common-ckan
+    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
+    container_name: ckan-${COMPOSE_PROFILES}
     build:
       context: ./docker/ckan/
-    container_name: ckan-${COMPOSE_PROFILES}
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     cap_add:
       - SYS_PTRACE
     depends_on:
@@ -48,7 +64,7 @@ services:
       redis:
         condition: service_healthy
     ports:
-      - "${CKAN_PORT}:5000"
+      - "${CKAN_PORT:-5000}:5000"
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
@@ -60,38 +76,14 @@ services:
       timeout: 10s
       retries: 5
 
-  datapusher:
-    << : *default-common-ckan
-    container_name: datapusher-${COMPOSE_PROFILES}
-    image: keitaro/ckan-datapusher:latest
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-
-  solr:
-    << : *default-common-ckan
-    build:
-      context: ./docker/solr/
-    container_name: solr-${COMPOSE_PROFILES}
-    image: dcatapit_solr-${COMPOSE_PROFILES}:latest
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8983"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
-    volumes:
-      - solr-data:/opt/solr/server/solr/ckan/data
-
   gather_consumer:
     << : *default-common-ckan
+    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
+    container_name: gather-${COMPOSE_PROFILES}    
     depends_on:
       ckan:
         condition: service_healthy
-    container_name: gather-${COMPOSE_PROFILES}
     entrypoint: /consumer-entrypoint.sh
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
@@ -100,35 +92,54 @@ services:
 
   fetch_consumer:
     << : *default-common-ckan
+    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
+    container_name: fetch-${COMPOSE_PROFILES}
     depends_on:
       ckan:
         condition: service_healthy
-    container_name: fetch-${COMPOSE_PROFILES}
     entrypoint: /consumer-entrypoint.sh
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
       - ./docker/ckan/ckan_harvesting_fetch.conf:/etc/supervisor/conf.d/ckan_harvesting.conf
 
-  # proxy:
-  #   << : *default-common-ckan
-  #   image: ghcr.io/linuxserver/swag:latest
-  #   container_name: proxy
-  #   cap_add:
-  #     - NET_ADMIN
-  #   volumes:
-  #     - proxy-config:/config
-  #     - ./site-confs/default:/config/nginx/site-confs/default
-  #   ports:
-  #     - "443:443"
-  #     - "80:80" #optional
-  #   healthcheck:
-  #     test: ["CMD", "curl", "-f", "http://localhost:80"]
-  #     interval: 10s
-  #     timeout: 10s
-  #     retries: 5
+  datapusher:
+    << : *default-common-ckan
+    container_name: datapusher-${COMPOSE_PROFILES}
+    image: keitaro/ckan-datapusher:latest
+    healthcheck:
+      test: curl --max-time 10 -f http://localhost:8000
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+  pycsw:
+    << : *default-common-ckan
+    container_name: pycsw-${COMPOSE_PROFILES}
+    image: geopython/pycsw:2.6.1
+    ports:
+      - ${PYCSW_PORT:-8000}:8000
+    volumes:
+      - ./pycsw.cfg:/etc/pycsw/pycsw.cfg
+
+  proxy:
+    << : *default-common-ckan
+    image: ghcr.io/linuxserver/swag:latest
+    container_name: proxy
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - proxy-config:/config
+      - ./site-confs/default:/config/nginx/site-confs/default
+    ports:
+      - "443:443"
+      - "80:80" #optional
+    healthcheck:
+      test: curl --max-time 10 -f http://localhost:80
+      interval: 10s
+      timeout: 10s
+      retries: 5
 
 volumes:
   proxy-config:

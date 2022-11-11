@@ -19,7 +19,7 @@ echo "########################################"
 # PGTMP=${CKAN_SQLALCHEMY_URL##*@}
 # CKAN_PG_HOST=${PGTMP%/*}
 
-CONFIG_INI="${CKAN_CONFIG}/production.ini"
+CONFIG_INI="${CKAN_CONFIG}/ckan.ini"
 
 abort () {
   echo "$@" >&2
@@ -54,6 +54,7 @@ write_config () {
 
 # Wait for PostgreSQL
 while ! pg_isready -h $PG_HOST -U ckan; do
+  echo "waiting for pg to be ready..."
   sleep 1;
 done
 
