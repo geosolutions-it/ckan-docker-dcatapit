@@ -11,8 +11,8 @@ services:
 
   db:
     << : *default-common-ckan
-    image: dcatapit_postgis-${COMPOSE_PROFILES}:latest
-    container_name: db-${COMPOSE_PROFILES}
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_postgis:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-db
     build:
       context: ./docker/db/
     healthcheck:
@@ -26,12 +26,13 @@ services:
 
   solr:
     << : *default-common-ckan
-    image: dcatapit_solr-${COMPOSE_PROFILES}:latest
-    container_name: solr-${COMPOSE_PROFILES}
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_solr:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-solr
     build:
       context: ./docker/solr/
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8983"]
+      test: curl --max-time 10 -f http://localhost:8983 || exit 1
+      start_period: 60s
       interval: 10s
       timeout: 10s
       retries: 5
@@ -41,17 +42,17 @@ services:
   redis:
     << : *default-common-ckan
     image: "redis:alpine"
-    container_name: redis-${COMPOSE_PROFILES}
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 3s
+      test: redis-cli ping
+      interval: 5s
       timeout: 5s
       retries: 5
 
   ckan:
     << : *default-common-ckan
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
-    container_name: ckan-${COMPOSE_PROFILES}
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-ckan
     build:
       context: ./docker/ckan/
     cap_add:
@@ -69,17 +70,18 @@ services:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
+      - ./pycsw.cfg:/etc/pycsw/pycsw.cfg      
     healthcheck:
       test: curl --max-time 10 -f http://localhost:5000/api/3 || exit 1
-      start_period: 60s
+      start_period: 180s
       interval: 10s
       timeout: 10s
       retries: 5
 
   gather_consumer:
     << : *default-common-ckan
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
-    container_name: gather-${COMPOSE_PROFILES}    
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-gather
     depends_on:
       ckan:
         condition: service_healthy
@@ -92,8 +94,8 @@ services:
 
   fetch_consumer:
     << : *default-common-ckan
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
-    container_name: fetch-${COMPOSE_PROFILES}
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-fetch
     depends_on:
       ckan:
         condition: service_healthy
@@ -106,27 +108,40 @@ services:
 
   datapusher:
     << : *default-common-ckan
-    container_name: datapusher-${COMPOSE_PROFILES}
+    container_name: ${COMPOSE_PROJECT_NAME}-datapusher
     image: keitaro/ckan-datapusher:latest
     healthcheck:
       test: curl --max-time 10 -f http://localhost:8000
+      start_period: 60s      
       interval: 10s
       timeout: 10s
       retries: 5
 
   pycsw:
     << : *default-common-ckan
-    container_name: pycsw-${COMPOSE_PROFILES}
-    image: geopython/pycsw:2.6.1
+    container_name: ${COMPOSE_PROJECT_NAME}-pycsw
+    image: ${COMPOSE_PROJECT_NAME}-pycsw:latest
+    build:
+      context: ./docker/pycsw/
+    depends_on:
+      # we need the ckan entrypoint to create the pycsw tables with required extra fields
+      ckan:
+        condition: service_healthy      
     ports:
       - ${PYCSW_PORT:-8000}:8000
     volumes:
       - ./pycsw.cfg:/etc/pycsw/pycsw.cfg
+    healthcheck:
+      test: curl --max-time 10 -f http://localhost:8000/ || exit 1
+      start_period: 20s
+      interval: 10s
+      timeout: 10s
+      retries: 5      
 
   proxy:
     << : *default-common-ckan
     image: ghcr.io/linuxserver/swag:latest
-    container_name: proxy
+    container_name: ${COMPOSE_PROJECT_NAME}-proxy
     cap_add:
       - NET_ADMIN
     volumes:

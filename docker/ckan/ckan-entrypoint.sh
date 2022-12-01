@@ -98,11 +98,6 @@ do
     crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
 done
 
-# customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins adbpo_ui
-# end of customer specific extensions
-
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url ${CKAN_SITE_URL}
@@ -227,6 +222,9 @@ ckan -c "$CONFIG_INI" multilang initdb
 
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
+
+echo "Initting DB... -- pycsw"
+python /ckan_pycsw.py setup -p /etc/pycsw/pycsw.cfg
 
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then

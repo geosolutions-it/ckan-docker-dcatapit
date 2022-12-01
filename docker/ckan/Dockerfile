@@ -79,6 +79,10 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@master#egg=ckanext-dcatapit && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
 
+# needed for pycsw integration, this is not the running service
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6.1#egg=pycsw && \
+    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/pycsw/requirements.txt
+
 # customer specific extensions
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
@@ -104,16 +108,15 @@ RUN chmod +x /usr/local/bin/scheduler.py
 RUN $CKAN_VENV/bin/pip install schedule==1.1.0
 
 # Setup CKAN custom scripts
-COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
-COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
-COPY ./ckan-run.sh /ckan-run.sh
-# debug tools, not working with container running as unprivileged user
-COPY ./gdb.commands /gdb.commands
-COPY ./capture_gdb.sh /capture_gdb.sh
-COPY ./ini $CKAN_HOME/ini
+COPY --chown=ckan:ckan ./ckan-entrypoint.sh ./ckan-run.sh ./consumer-entrypoint.sh ./ckan_pycsw.py /
+RUN chmod +x            /ckan-entrypoint.sh  /ckan-run.sh  /consumer-entrypoint.sh 
 
-RUN chmod +x           /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh && \
-    chown ckan:ckan -R /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
+# debug tools, not working with container running as unprivileged user
+COPY --chown=ckan:ckan ./gdb.commands ./capture_gdb.sh /
+RUN chmod +x           /capture_gdb.sh
+
+# copy custom .ini snippets
+COPY ./ini $CKAN_HOME/ini
 
 #Please comment if you need to use debugging tools like gdb
 USER ckan

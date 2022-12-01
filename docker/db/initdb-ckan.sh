@@ -9,6 +9,19 @@ function create_CKAN_user_and_database() {
 EOSQL
 }
 
+function create_pycsw_db() {
+	echo "  Creating pycsw database '$CKAN_DATABASE_USER;'"
+	psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" <<-EOSQL
+
+		CREATE DATABASE $PYCSW_DATABASE WITH OWNER $CKAN_DATABASE_USER;
+		\c $PYCSW_DATABASE
+        CREATE EXTENSION IF NOT EXISTS postgis; 
+        ALTER VIEW geometry_columns OWNER TO $CKAN_DATABASE_USER; 
+        ALTER TABLE spatial_ref_sys OWNER TO $CKAN_DATABASE_USER;
+EOSQL
+}
+
+
 function update_database_with_postgis() {
     echo "  Updating database '$CKAN_DATABASE' with extension"
     psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$CKAN_DATABASE" <<-EOSQL
@@ -28,5 +41,8 @@ if [ -n "$CKAN_DATABASE" ]; then
 	echo "CKAN databases creation requested: $CKAN_DATABASE, $DATASTORE_DB"
 	create_CKAN_user_and_database
 	update_database_with_postgis
+
+	create_pycsw_db
+
 	echo "CKAN databases created"
 fi

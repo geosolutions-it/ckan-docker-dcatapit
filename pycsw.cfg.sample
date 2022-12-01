@@ -37,7 +37,7 @@ encoding=UTF-8
 language=en-US
 maxrecords=10
 loglevel=DEBUG
-#logfile=
+logfile=/var/log/pycsw/pycsw.log
 #ogc_schemas_base=http://foo
 #federatedcatalogues=http://catalog.data.gov/csw
 #pretty_print=true
@@ -82,7 +82,7 @@ contact_role=pointOfContact
 # sqlite
 #database=sqlite:////home/pycsw/tests/functionaltests/suites/cite/data/cite.db
 # postgres
-database=postgresql://postgres:mypass@db/pycsw
+database=${PYCSW_SQLALCHEMY_URL}
 # mysql
 #database=mysql://username:password@localhost/pycsw?charset=utf8
 #mappings=path/to/mappings.py
