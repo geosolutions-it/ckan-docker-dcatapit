@@ -13,7 +13,7 @@ schedule.every(15).minutes.do(harvester_run)
 
 def pycsw_synch():
     logging.info('Running pycsw sync')
-    os.system('/usr/lib/ckan/venv/bin/python /ckan_pycsw.py load -p /etc/pycsw/pycsw.cfg --ckan_url http://ckan:5000/  && touch /tmp/SCHEDULER_pycsw_synch')
+    os.system('/usr/lib/ckan/pycsw-venv/bin/python /ckan_pycsw.py load -p /etc/pycsw/pycsw.cfg --ckan_url http://ckan:5000/  && touch /tmp/SCHEDULER_pycsw_synch')
     logging.info('Completed pycsw sync')
 
 schedule.every(15).minutes.do(pycsw_synch)

@@ -79,11 +79,8 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@master#egg=ckanext-dcatapit && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
 
-# needed for pycsw integration, this is not the running service
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6.1#egg=pycsw && \
-    $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/pycsw/requirements.txt
-# needed to parse gmx:Anchor
-RUN $CKAN_VENV/bin/pip install 'OWSLib>=0.19.0'
+# last pre-2 version (ckanext-spatial sets => 1.2.13)
+RUN $CKAN_VENV/bin/pip install Shapely==1.8.5
 
 # customer specific extensions
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-liguria@main#egg=ckanext-liguria && \
@@ -91,6 +88,20 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
 # end of customer specific extensions
+
+
+### Create VENV for pycsw synch task
+ENV PYCSW_VENV $CKAN_HOME/pycsw-venv
+RUN mkdir -p $PYCSW_VENV
+RUN python3 -m venv $PYCSW_VENV
+RUN $PYCSW_VENV/bin/pip install -U pip setuptools
+RUN $PYCSW_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6.1#egg=pycsw && \
+    $PYCSW_VENV/bin/pip install -r $PYCSW_VENV/src/pycsw/requirements-standalone.txt && \
+    $PYCSW_VENV/bin/pip install -r $PYCSW_VENV/src/pycsw/requirements-pg.txt
+# needed to parse gmx:Anchor
+#RUN $PYCSW_VENV/bin/pip install 'OWSLib>=0.19.0'
+# This is also set on pycsw master branch
+RUN $PYCSW_VENV/bin/pip install 'Shapely<2.0'
 
 
 RUN $CKAN_VENV/bin/pip install supervisor==4.2.4
