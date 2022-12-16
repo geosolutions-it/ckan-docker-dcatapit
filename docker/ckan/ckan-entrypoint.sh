@@ -158,12 +158,11 @@ crudini --set --verbose ${CONFIG_TMP} app:main geonames.limits.countries IT
 crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USERNAME}
 
 # customer specific plugins
-#for plugin in \
-#    grouplabel \
-#    custom_lf custom_harvester
-#do
-#    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
-#done
+for plugin in \
+   liguria
+do
+   crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
+done
 
 #crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckanext.dcat.rdf.profiles custom_ap
 # end of customer specific extensions

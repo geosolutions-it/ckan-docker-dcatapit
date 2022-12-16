@@ -86,6 +86,8 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6
 RUN $CKAN_VENV/bin/pip install 'OWSLib>=0.19.0'
 
 # customer specific extensions
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-liguria@main#egg=ckanext-liguria && \
+     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-liguria/requirements.txt
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
 # end of customer specific extensions
