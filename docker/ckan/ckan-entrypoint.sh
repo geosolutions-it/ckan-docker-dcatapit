@@ -128,6 +128,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckan.locale_order     "it en de f
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.locales_offered  "it en de fr"
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend solr
+crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.harvest.continue_on_validation_errors True
 
 # preview formats
 

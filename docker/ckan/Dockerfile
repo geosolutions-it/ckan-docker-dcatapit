@@ -82,6 +82,8 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 # needed for pycsw integration, this is not the running service
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6.1#egg=pycsw && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/pycsw/requirements.txt
+# needed to parse gmx:Anchor
+RUN $CKAN_VENV/bin/pip install 'OWSLib>=0.19.0'
 
 # customer specific extensions
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \

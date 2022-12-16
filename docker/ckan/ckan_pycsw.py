@@ -8,6 +8,7 @@ import io
 import os
 import argparse
 import configparser
+import json
 
 import requests
 from lxml import etree
@@ -73,9 +74,11 @@ def set_keywords(pycsw_config_file, pycsw_config, ckan_url, limit=20):
 
 
 def load(pycsw_config, ckan_url):
+    def extract_extra(extra, name):
+        return next((x['value'] for x in extra if x['key']==name), None)
 
     database = pycsw_config.get("repository", "database")
-    table_name = pycsw_config.get("repository", "table", "records")
+    table_name = pycsw_config.get("repository", "table", fallback="records")
 
     context = pycsw.core.config.StaticContext()
     repo = repository.Repository(database, context, table=table_name)
@@ -86,9 +89,18 @@ def load(pycsw_config, ckan_url):
         )
     )
 
-    query = 'api/search/dataset?qjson={"fl":"id,metadata_modified,extras_harvest_object_id,extras_metadata_source", "q":"harvest_object_id:[\\"\\" TO *]", "limit":1000, "start":%s}'
-
     start = 0
+    page_size = 20
+
+    # query = 'api/search/dataset?qjson={"fl":"id,metadata_modified,extras_harvest_object_id,extras_metadata_source", '
+    #         '"q":"harvest_object_id:[\\"\\" TO *]", '
+    #         '"limit":1000, "start":%s}'
+
+    query = 'api/3/action/package_search' \
+            '?fl=id,title,metadata_modified,harvest_object_id,harvest_source_id,extras_guid' \
+            '&q=harvest_object_id:["" TO *]' \
+            f'&rows={page_size}' \
+            '&start=%s'
 
     gathered_records = {}
 
@@ -96,20 +108,23 @@ def load(pycsw_config, ckan_url):
         url = ckan_url + query % start
 
         response = requests.get(url)
+        #print(response.content)
         listing = response.json()
         if not isinstance(listing, dict):
             raise RuntimeError("Wrong API response: %s" % listing)
-        results = listing.get("results")
+        result = listing.get("result", {})
+        results = result.get("results")
         if not results:
             break
         for result in results:
             gathered_records[result["id"]] = {
                 "metadata_modified": result["metadata_modified"],
-                "harvest_object_id": result["extras"]["harvest_object_id"],
-                "source": result["extras"].get("metadata_source"),
+                "harvest_object_id": result["harvest_object_id"],
+                "source": result["harvest_source_id"],  # metadata_source is unknown
+                "guid": result["guid"],
             }
 
-        start = start + 1000
+        start = start + page_size
         log.debug("Gathered %s" % start)
 
     log.info(
@@ -184,7 +199,7 @@ def clear(pycsw_config):
     from sqlalchemy import create_engine, MetaData, Table
 
     database = pycsw_config.get("repository", "database")
-    table_name = pycsw_config.get("repository", "table", "records")
+    table_name = pycsw_config.get("repository", "table", fallback="records")
 
     log.debug("Creating engine")
     engine = create_engine(database)
@@ -194,8 +209,7 @@ def clear(pycsw_config):
 
 
 def get_record(context, repo, ckan_url, ckan_id, ckan_info):
-    query = ckan_url + "harvest/object/%s"
-    url = query % ckan_info["harvest_object_id"]
+    url = f'{ckan_url}harvest/object/{ckan_info["harvest_object_id"]}'
     response = requests.get(url)
 
     if ckan_info["source"] == "arcgis":
@@ -210,7 +224,8 @@ def get_record(context, repo, ckan_url, ckan_id, ckan_info):
     try:
         record = metadata.parse_record(context, xml, repo)[0]
     except Exception as err:
-        log.error("Could not extract metadata from %s, Error: %s" % (ckan_id, err))
+        log.error("Could not extract metadata from document - ckan id:%s, identifier %s, Error: %s" %
+                  (ckan_id, ckan_info["guid"], err))
         return
 
     if not record.identifier:

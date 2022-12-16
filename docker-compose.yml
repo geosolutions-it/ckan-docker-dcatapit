@@ -70,10 +70,11 @@ services:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
-      - ./pycsw.cfg:/etc/pycsw/pycsw.cfg      
+      - ${PWD}/pycsw.cfg:/etc/pycsw/pycsw.cfg
     healthcheck:
       test: curl --max-time 10 -f http://localhost:5000/api/3 || exit 1
-      start_period: 180s
+      # first startup and config takes really long
+      start_period: 240s
       interval: 10s
       timeout: 10s
       retries: 5
@@ -130,31 +131,31 @@ services:
     ports:
       - ${PYCSW_PORT:-8000}:8000
     volumes:
-      - ./pycsw.cfg:/etc/pycsw/pycsw.cfg
+      - ${PWD}/pycsw.cfg:/etc/pycsw/pycsw.cfg
     healthcheck:
       test: curl --max-time 10 -f http://localhost:8000/ || exit 1
       start_period: 20s
-      interval: 10s
+      interval: 60s
       timeout: 10s
       retries: 5      
 
-  proxy:
-    << : *default-common-ckan
-    image: ghcr.io/linuxserver/swag:latest
-    container_name: ${COMPOSE_PROJECT_NAME}-proxy
-    cap_add:
-      - NET_ADMIN
-    volumes:
-      - proxy-config:/config
-      - ./site-confs/default:/config/nginx/site-confs/default
-    ports:
-      - "443:443"
-      - "80:80" #optional
-    healthcheck:
-      test: curl --max-time 10 -f http://localhost:80
-      interval: 10s
-      timeout: 10s
-      retries: 5
+  # proxy:
+  #   << : *default-common-ckan
+  #   image: ghcr.io/linuxserver/swag:latest
+  #   container_name: ${COMPOSE_PROJECT_NAME}-proxy
+  #   cap_add:
+  #     - NET_ADMIN
+  #   volumes:
+  #     - proxy-config:/config
+  #     - ./site-confs/default:/config/nginx/site-confs/default
+  #   ports:
+  #     - "443:443"
+  #     - "80:80" #optional
+  #   healthcheck:
+  #     test: curl --max-time 10 -f http://localhost:80
+  #     interval: 10s
+  #     timeout: 10s
+  #     retries: 5
 
 volumes:
   proxy-config:
