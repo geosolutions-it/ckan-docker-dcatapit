@@ -19,7 +19,7 @@ echo "########################################"
 # PGTMP=${CKAN_SQLALCHEMY_URL##*@}
 # CKAN_PG_HOST=${PGTMP%/*}
 
-CONFIG_INI="${CKAN_CONFIG}/production.ini"
+CONFIG_INI="${CKAN_CONFIG}/ckan.ini"
 
 abort () {
   echo "$@" >&2
@@ -54,6 +54,7 @@ write_config () {
 
 # Wait for PostgreSQL
 while ! pg_isready -h $PG_HOST -U ckan; do
+  echo "waiting for pg to be ready..."
   sleep 1;
 done
 
@@ -97,11 +98,6 @@ do
     crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
 done
 
-# customer specific extensions
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins geonode_harvester
-crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins adbpo_ui
-# end of customer specific extensions
-
 crudini --set --verbose ${CONFIG_TMP} DEFAULT debug False
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.site_url ${CKAN_SITE_URL}
@@ -132,6 +128,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main ckan.locale_order     "it en de f
 crudini --set --verbose ${CONFIG_TMP} app:main ckan.locales_offered  "it en de fr"
 
 crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.search_backend solr
+crudini --set --verbose ${CONFIG_TMP} app:main ckanext.spatial.harvest.continue_on_validation_errors True
 
 # preview formats
 
@@ -226,6 +223,9 @@ ckan -c "$CONFIG_INI" multilang initdb
 
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
+
+echo "Initting DB... -- pycsw"
+/usr/lib/ckan/pycsw-venv/bin/python  /ckan_pycsw.py setup -p /etc/pycsw/pycsw.cfg
 
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then

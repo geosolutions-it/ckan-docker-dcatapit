@@ -79,10 +79,27 @@ RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-dcatapit@master#egg=ckanext-dcatapit && \
      $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcatapit/requirements.txt
 
+# last pre-2 version (ckanext-spatial sets => 1.2.13)
+RUN $CKAN_VENV/bin/pip install Shapely==1.8.5
+
 # customer specific extensions
 #RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-geonode@master#egg=ckanext-geonode && \
 #     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-geonode/requirements.txt
 # end of customer specific extensions
+
+
+### Create VENV for pycsw synch task
+ENV PYCSW_VENV $CKAN_HOME/pycsw-venv
+RUN mkdir -p $PYCSW_VENV
+RUN python3 -m venv $PYCSW_VENV
+RUN $PYCSW_VENV/bin/pip install -U pip setuptools
+RUN $PYCSW_VENV/bin/pip install -e git+https://github.com/geopython/pycsw.git@2.6.1#egg=pycsw && \
+    $PYCSW_VENV/bin/pip install -r $PYCSW_VENV/src/pycsw/requirements-standalone.txt && \
+    $PYCSW_VENV/bin/pip install -r $PYCSW_VENV/src/pycsw/requirements-pg.txt
+# needed to parse gmx:Anchor
+#RUN $PYCSW_VENV/bin/pip install 'OWSLib>=0.19.0'
+# This is also set on pycsw master branch
+RUN $PYCSW_VENV/bin/pip install 'Shapely<2.0'
 
 
 RUN $CKAN_VENV/bin/pip install supervisor==4.2.4
@@ -104,16 +121,15 @@ RUN chmod +x /usr/local/bin/scheduler.py
 RUN $CKAN_VENV/bin/pip install schedule==1.1.0
 
 # Setup CKAN custom scripts
-COPY ./consumer-entrypoint.sh /consumer-entrypoint.sh
-COPY ./ckan-entrypoint.sh /ckan-entrypoint.sh
-COPY ./ckan-run.sh /ckan-run.sh
-# debug tools, not working with container running as unprivileged user
-COPY ./gdb.commands /gdb.commands
-COPY ./capture_gdb.sh /capture_gdb.sh
-COPY ./ini $CKAN_HOME/ini
+COPY --chown=ckan:ckan ./ckan-entrypoint.sh ./ckan-run.sh ./consumer-entrypoint.sh ./ckan_pycsw.py /
+RUN chmod +x            /ckan-entrypoint.sh  /ckan-run.sh  /consumer-entrypoint.sh 
 
-RUN chmod +x           /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh && \
-    chown ckan:ckan -R /ckan-entrypoint.sh /ckan-run.sh /consumer-entrypoint.sh /capture_gdb.sh
+# debug tools, not working with container running as unprivileged user
+COPY --chown=ckan:ckan ./gdb.commands ./capture_gdb.sh /
+RUN chmod +x           /capture_gdb.sh
+
+# copy custom .ini snippets
+COPY ./ini $CKAN_HOME/ini
 
 #Please comment if you need to use debugging tools like gdb
 USER ckan
