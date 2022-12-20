@@ -185,7 +185,7 @@ echo "Configuring datastore..."
 
 # we don't want logs lines to creep into the sql script
 $CKAN_VENV/bin/ckan -c ${CONFIG_INI} datastore set-permissions | grep -v  sqlalchemy.pool > /tmp/check_datastore.sql
-PGPASSWORD=${CKAN_DATABASE_PASSWORD} psql --set ON_ERROR_STOP=1 -U ckan -h ${PG_HOST} --dbname datastore -f /tmp/check_datastore.sql
+PGPASSWORD=${CKAN_DATABASE_PASSWORD} psql --set ON_ERROR_STOP=1 -U $CKAN_DATABASE_USER -h ${PG_HOST} --dbname $DATASTORE_DB -f /tmp/check_datastore.sql
 
 # Get or create CKAN_SQLALCHEMY_URL
 if [ -z "$CKAN_SQLALCHEMY_URL" ]; then
