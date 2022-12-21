@@ -159,7 +159,7 @@ crudini --set --verbose ${CONFIG_TMP} app:main geonames.username ${GEONAMES_USER
 
 # customer specific plugins
 for plugin in \
-   liguria
+   liguria waf_harvester
 do
    crudini --set --verbose --list --list-sep=\  ${CONFIG_TMP} app:main ckan.plugins $plugin
 done
