@@ -91,7 +91,7 @@ for plugin in \
     datastore datapusher \
     harvest \
     spatial_metadata spatial_query \
-    structured_data dcat dcat_json_interface \
+    structured_data dcat dcat_json_interface dcat_rdf_harvester \
     multilang \
     dcatapit_pkg dcatapit_org dcatapit_config dcatapit_harvest_list dcatapit_harvester dcatapit_csw_harvester dcatapit_vocabulary
 do
