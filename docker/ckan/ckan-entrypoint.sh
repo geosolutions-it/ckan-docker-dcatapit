@@ -223,8 +223,8 @@ ckan -c "$CONFIG_INI" multilang initdb
 echo "Initting DB... -- dcatapit"
 ckan -c "$CONFIG_INI" dcatapit initdb
 
-echo "Initting DB... -- pycsw"
-/usr/lib/ckan/pycsw-venv/bin/python  /ckan_pycsw.py setup -p /etc/pycsw/pycsw.cfg
+# echo "Initting DB... -- pycsw"
+# /usr/lib/ckan/pycsw-venv/bin/python  /ckan_pycsw.py setup -p /etc/pycsw/pycsw.cfg
 
 
 if [ "$(ckan -c "$CONFIG_INI" sysadmin list 2>&1 | grep ^User | grep -v 'name=default' | wc -l )" == "0" ];then
