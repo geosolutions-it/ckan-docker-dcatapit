@@ -61,9 +61,9 @@ RUN python3 -m venv $CKAN_VENV
 RUN git clone https://github.com/ckan/ckan.git -b 2.9 $CKAN_VENV/src/ckan
 
 RUN $CKAN_VENV/bin/pip install -U pip && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/dev-requirements.txt && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/dev-requirements.txt && \
     $CKAN_VENV/bin/pip install -e $CKAN_VENV/src/ckan/ && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 
