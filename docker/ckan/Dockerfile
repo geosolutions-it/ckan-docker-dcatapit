@@ -60,18 +60,18 @@ RUN python3 -m venv $CKAN_VENV
 
 RUN git clone https://github.com/ckan/ckan.git -b 2.9 $CKAN_VENV/src/ckan
 
-RUN $CKAN_VENV/bin/pip install -U pip && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
-    $CKAN_VENV/bin/pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/dev-requirements.txt && \
+RUN $CKAN_VENV/bin/pip install -U pip wheel && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
+    $CKAN_VENV/bin/pip install --no-cache-dir -r $CKAN_VENV/src/ckan/dev-requirements.txt && \
     $CKAN_VENV/bin/pip install -e $CKAN_VENV/src/ckan/ && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@master#egg=ckanext-harvest && \
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-harvest.git@v1.4.0#egg=ckanext-harvest && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-harvest/pip-requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.0.0#egg=ckanext-spatial && \
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-spatial.git@v1.1.0#egg=ckanext-spatial && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-spatial/requirements.txt
-RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@master#egg=ckanext-dcat && \
+RUN $CKAN_VENV/bin/pip install -e git+https://github.com/ckan/ckanext-dcat.git@v1.4.0#egg=ckanext-dcat && \
     $CKAN_VENV/bin/pip install -r $CKAN_VENV/src/ckanext-dcat/requirements.txt
 RUN $CKAN_VENV/bin/pip install -e git+https://github.com/geosolutions-it/ckanext-multilang@master#egg=ckanext-multilang && \
      cd $CKAN_VENV/src/ckanext-multilang && $CKAN_VENV/bin/python setup.py develop && \
