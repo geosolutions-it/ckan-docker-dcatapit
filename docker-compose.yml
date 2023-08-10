@@ -3,41 +3,42 @@ version: "3.9"
 # Common template for CKAN services below
 x-common-ckan:
   &default-common-ckan
-  restart: on-failure
+  restart: unless-stopped
   env_file:
     - .env
 
 services:
   redis:
     << : *default-common-ckan
-    container_name: redis-${COMPOSE_PROFILES}
     image: "redis:alpine"
+    container_name: ${COMPOSE_PROJECT_NAME}-redis
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 3s
+      test: redis-cli ping
+      interval: 5s
       timeout: 5s
       retries: 5
 
   db:
     << : *default-common-ckan
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_postgis:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-db
     build:
       context: ./docker/db/
-    image: dcatapit_postgis-${COMPOSE_PROFILES}:latest
-    container_name: db-${COMPOSE_PROFILES}
     volumes:
       - db:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "${POSTGRES_USER}"]
+      start_period: 60s
       interval: 10s
       timeout: 5s
       retries: 5
 
   ckan:
     << : *default-common-ckan
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-ckan
     build:
       context: ./docker/ckan/
-    container_name: ckan-${COMPOSE_PROFILES}
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     cap_add:
       - SYS_PTRACE
     depends_on:
@@ -54,30 +55,33 @@ services:
       - ckan-config:/etc/ckan
       - ckan-logs:/var/log/ckan
     healthcheck:
-      test: ["CMD", "curl", "--max-time", "10", "-f", "http://localhost:5000/api/3"]
-      interval: 10s
+      test: curl --max-time 10 -f http://localhost:5000/api/3 || exit 1
+      # first startup and config takes really long
+      start_period: 240s
+      interval: 30s
       timeout: 10s
-      # this is quite high to avoid the check failing because ckan is not yet configured.
-      retries: 30
+      retries: 5
 
   datapusher:
     << : *default-common-ckan
-    container_name: datapusher-${COMPOSE_PROFILES}
+    container_name: ${COMPOSE_PROJECT_NAME}-datapusher
     image: keitaro/ckan-datapusher:latest
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000"]
-      interval: 10s
+      test: curl --max-time 10 -f http://localhost:8000
+      start_period: 60s      
+      interval: 300s
       timeout: 10s
       retries: 5
 
   solr:
     << : *default-common-ckan
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_solr:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-solr
     build:
       context: ./docker/solr/
-    container_name: solr-${COMPOSE_PROFILES}
-    image: dcatapit_solr-${COMPOSE_PROFILES}:latest
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8983"]
+      test: curl --max-time 10 -f http://localhost:8983 || exit 1
+      start_period: 60s
       interval: 10s
       timeout: 10s
       retries: 5
@@ -86,12 +90,12 @@ services:
 
   gather_consumer:
     << : *default-common-ckan
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-gather
     depends_on:
       ckan:
         condition: service_healthy
-    container_name: gather-${COMPOSE_PROFILES}
     entrypoint: /consumer-entrypoint.sh
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
@@ -100,12 +104,12 @@ services:
 
   fetch_consumer:
     << : *default-common-ckan
+    image: ${COMPOSE_PROJECT_NAME}-dcatapit_ckan:latest
+    container_name: ${COMPOSE_PROJECT_NAME}-fetch
     depends_on:
       ckan:
         condition: service_healthy
-    container_name: fetch-${COMPOSE_PROFILES}
     entrypoint: /consumer-entrypoint.sh
-    image: dcatapit_ckan-${COMPOSE_PROFILES}:latest
     volumes:
       - ckan-data:/var/lib/ckan
       - ckan-config:/etc/ckan
