@@ -1,30 +1,35 @@
-FROM solr:6.6.5
-LABEL Open Knowledge
+FROM ckan/ckan-solr:2.10-solr9-spatial
 
-# Enviroment
-ENV SOLR_CORE ckan
+ENV SCHEMA_UPDATE_FIELD '\
+    <!-- ckanext-multilang --> \n\
+    <dynamicField name="package_multilang_localized_*" type="text" indexed="true" stored="true" multiValued="false"/> \n\
+    <!-- end of ckanext-multilang --> \n\
+ \n\
+    <!-- ckanext-dcatapit --> \n\
+    <field        name="dcat_theme"            type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <field        name="dcat_subtheme"         type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <dynamicField name="dcat_subtheme_*"       type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <dynamicField name="organization_region_*" type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <dynamicField name="resource_license_*"    type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <field        name="resource_license"      type="string" indexed="true" stored="false" multiValued="true"/> \n\
+    <!-- end of ckanext-dcatapit --> \n\
+ \n\
+    <dynamicField name="harvest_*" type="text" indexed="true" stored="true" multiValued="false"/> \n\
+'
 
-# Create Directories
-RUN mkdir -p /opt/solr/server/solr/$SOLR_CORE/conf
-RUN mkdir -p /opt/solr/server/solr/$SOLR_CORE/data
+ENV SCHEMA_UPDATE_COPY '\
+<!-- ckanext-multilang --> \n\
+<copyField source="package_multilang_localized_*" dest="text"/>   \n\
+<!-- end of ckanext-multilang --> \n\
+\
+'
 
-# Adding Files
-ADD solrconfig.xml \
-schema.xml \
-https://raw.githubusercontent.com/apache/lucene-solr/releases/lucene-solr/6.6.5/solr/server/solr/configsets/basic_configs/conf/currency.xml \
-https://raw.githubusercontent.com/apache/lucene-solr/releases/lucene-solr/6.6.5/solr/server/solr/configsets/basic_configs/conf/synonyms.txt \
-https://raw.githubusercontent.com/apache/lucene-solr/releases/lucene-solr/6.6.5/solr/server/solr/configsets/basic_configs/conf/stopwords.txt \
-https://raw.githubusercontent.com/apache/lucene-solr/releases/lucene-solr/6.6.5/solr/server/solr/configsets/basic_configs/conf/protwords.txt \
-https://raw.githubusercontent.com/apache/lucene-solr/releases/lucene-solr/6.6.5/solr/server/solr/configsets/data_driven_schema_configs/conf/elevate.xml \
-/opt/solr/server/solr/$SOLR_CORE/conf/
-
-# Create Core.properties
-RUN echo name=$SOLR_CORE > /opt/solr/server/solr/$SOLR_CORE/core.properties
-
-# Giving ownership to Solr
+ENV SOLR_SCHEMA_FILE="$SOLR_CONFIG_DIR/ckan/conf/managed-schema"
 
 USER root
-RUN chown -R $SOLR_USER:$SOLR_USER /opt/solr/server/solr/$SOLR_CORE
 
-# User
-USER $SOLR_USER
+RUN sed -i "/<\/fields>/i $SCHEMA_UPDATE_FIELD" $SOLR_SCHEMA_FILE
+RUN sed -i "/<\/schema>/i $SCHEMA_UPDATE_COPY" $SOLR_SCHEMA_FILE
+
+USER solr
+CMD ["sh", "-c", "solr-precreate ckan $SOLR_CONFIG_DIR/ckan"]

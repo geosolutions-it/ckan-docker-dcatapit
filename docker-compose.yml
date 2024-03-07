@@ -37,7 +37,7 @@ services:
       timeout: 10s
       retries: 5
     volumes:
-      - solr-data:/opt/solr/server/solr/ckan/data
+      - solr-data:/var/solr/
 
   redis:
     << : *default-common-ckan
